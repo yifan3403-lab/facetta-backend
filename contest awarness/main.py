@@ -15,6 +15,7 @@ current_recommend = "暂无推荐"
 # ========== 2. 声音自动采集和识别 ==========
 labels_path = 'yamnetclassmap.csv'
 
+
 def record_audio(filename, duration=20, fs=16000):
     print(f"开始录音（{duration}秒）...")
     data = sd.rec(int(duration * fs), samplerate=fs, channels=1)
@@ -22,10 +23,12 @@ def record_audio(filename, duration=20, fs=16000):
     sf.write(filename, data, fs)
     print(f"录音完成：{filename}")
 
+
 def load_labels(label_file):
     with open(label_file, 'r') as lf:
         lines = lf.readlines()
         return [line.strip().split(',')[2] for line in lines[1:]]
+
 
 def yamnet_scene_recognize(audio_file):
     wav, sr = librosa.load(audio_file, sr=16000, mono=True)
@@ -40,6 +43,7 @@ def yamnet_scene_recognize(audio_file):
     print("Top-5 识别结果：", top_results)
     return class_names[top_N_idx[0]]
 
+
 def recommend_content_audio(scene_label):
     scene_label = scene_label.lower()
     if any(x in scene_label for x in [
@@ -48,11 +52,11 @@ def recommend_content_audio(scene_label):
     ]):
         return "推荐：只展示大纲"
     if any(x in scene_label.lower() for x in [
-    "street", "road", "sidewalk", "traffic", "vehicle", "car", "bus", "truck", "motorcycle",
-    "horn", "outdoor", "park", "plaza", "square", "crosswalk", "bicycle", "footsteps", "crowd",
-    "speech", "talking", "conversation", "shout", "yelling", "dog", "bird", "birds", "wind", "nature",
-    "children playing", "skateboard", "ambulance", "fire engine", "siren", "animal", "animals"
-]):
+        "street", "road", "sidewalk", "traffic", "vehicle", "car", "bus", "truck", "motorcycle",
+        "horn", "outdoor", "park", "plaza", "square", "crosswalk", "bicycle", "footsteps", "crowd",
+        "speech", "talking", "conversation", "shout", "yelling", "dog", "bird", "birds", "wind", "nature",
+        "children playing", "skateboard", "ambulance", "fire engine", "siren", "animal", "animals"
+    ]):
         return "推荐：推送音频界面"
     if any(x in scene_label for x in [
         "silence", "quiet", "writing", "pen", "pencil", "typing", "keyboard", "mouse click", "paper",
@@ -61,6 +65,7 @@ def recommend_content_audio(scene_label):
     ]):
         return "推荐：详细完整界面"
     return "推荐：详细完整界面"
+
 
 def auto_audio_task():
     global current_recommend
@@ -71,9 +76,11 @@ def auto_audio_task():
         print("【声音自动识别】推荐内容：", current_recommend)
         time.sleep(30)  # 7分钟
 
+
 # ========== 3. 图片识别相关 ==========
 API_KEY = "8tysemSM2znDUagY7NYuyfQj"
 SECRET_KEY = "Cnk4aYkrmBIBeiMQOCzEmWIJOdhcAdnG"
+
 
 def get_baidu_access_token(api_key, secret_key):
     url = "https://aip.baidubce.com/oauth/2.0/token"
@@ -85,6 +92,7 @@ def get_baidu_access_token(api_key, secret_key):
     res = requests.post(url, params=params)
     return res.json()["access_token"]
 
+
 def baidu_scene_classify(image_path, access_token):
     with open(image_path, "rb") as f:
         img_data = base64.b64encode(f.read()).decode()
@@ -94,6 +102,7 @@ def baidu_scene_classify(image_path, access_token):
     data = {"image": img_data}
     res = requests.post(url, params=params, data=data, headers=headers)
     return res.json()
+
 
 def recommend_content(keywords):
     for kw in keywords:
@@ -112,8 +121,10 @@ def recommend_content(keywords):
             return "推荐：推送音频界面"
     return "推荐：只展示大纲"
 
+
 # ========== 4. FastAPI接口 ==========
 app = FastAPI()
+
 
 @app.post("/recognize_image_scene")
 async def recognize_image_scene(file: UploadFile = File(...)):
@@ -127,9 +138,11 @@ async def recognize_image_scene(file: UploadFile = File(...)):
     current_recommend = recommend
     return {"scene_keywords": keywords, "recommend": recommend}
 
+
 @app.get("/get_latest_recommend")
 def get_latest_recommend():
     return {"recommend": current_recommend}
+
 
 # ========== 5. 主程序启动 ==========
 if __name__ == "__main__":
